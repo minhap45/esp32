@@ -29,7 +29,7 @@
         margin-top: 20px;
       }
       .button {
-        background-color: #808080;
+        background-color: #089757;
         border: none;
         color: white;
         padding: 16px 40px;
@@ -40,15 +40,6 @@
         border-radius: 10px;
         width: 200px;
       }
-      /* .button-on {
-        background-color: green;
-      } 
-      .button-off {
-        background-color: red;
-      }
-      .button-auto {
-        background-color: #1e88e5;
-      } */
       .status-label {
         background-color: #841373;
       }
@@ -103,7 +94,7 @@
       var broker = "test.mosquitto.org";
       var port = 8081;
       var clientID = "web_" + parseInt(Math.random() * 100, 10);
-      var topic = "minhsama";
+      var topic = "thangwibu";
       var mqttClient = new Paho.MQTT.Client(broker, port, clientID);
 
       var buttons = document.querySelectorAll(".button");
@@ -124,13 +115,19 @@
         var message;
         switch (buttonId) {
           case 0:
+            ledStatus = "Đang bật";
             message = "1";
+
             break;
           case 1:
+            ledStatus = "Đang tắt";
             message = "2";
+
             break;
           case 2:
+            ledStatus = "Tự động";
             message = "3";
+
             break;
         }
 
@@ -173,6 +170,7 @@
           "Thứ Sáu",
           "Thứ Bảy",
         ];
+
         var monthNames = [
           "01",
           "02",
