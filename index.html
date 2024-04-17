@@ -91,11 +91,11 @@
 
     <!-- JavaScript để gửi yêu cầu và hiển thị giá trị ánh sáng -->
     <script>
-      var broker = "test.mosquitto.org";
-      var port = 8081;
+      var broker = "wss://test.mosquitto.org:8081/mqtt";
+     // var port = 8081;
       var clientID = "web_" + parseInt(Math.random() * 100, 10);
-      var topic = "thangwibu";
-      var mqttClient = new Paho.MQTT.Client(broker, port, clientID);
+      var topic = "minhsamaminhsama";
+      var mqttClient = new Paho.MQTT.Client(broker, clientID);
 
       var buttons = document.querySelectorAll(".button");
 
