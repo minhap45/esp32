@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      html {
+        font-family: Arial;
+        display: inline-block;
+        margin: 0px auto;
+        text-align: center;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+      p {
+        font-size: 2rem;
+      }
+      .units {
+        font-size: 1.2rem;
+      }
+      .dht-labels {
+        font-size: 1.5rem;
+        vertical-align: middle;
+        padding-bottom: 15px;
+      }
+      .button-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+      }
+      .button {
+        background-color: #808080;
+        border: none;
+        color: white;
+        padding: 16px 40px;
+        text-decoration: none;
+        font-size: 30px;
+        margin: 4px;
+        cursor: pointer;
+        border-radius: 10px;
+        width: 200px;
+      }
+      /* .button-on {
+        background-color: green;
+      } 
+      .button-off {
+        background-color: red;
+      }
+      .button-auto {
+        background-color: #1e88e5;
+      } */
+      .status-label {
+        background-color: #841373;
+      }
+      h2 {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #1e88e5; /* Màu xanh dương */
+        margin-top: 10px;
+      }
+      .status-on {
+        color: #4caf50;
+      }
+      .status-off {
+        color: #f44336;
+      }
+      .status-auto {
+        color: #1e88e5;
+      }
+      .button.clicked {
+        background-color: red !important; /* Thêm !important để ghi đè các quy tắc khác */
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+  </head>
+  <body>
+    <!-- Hiển thị thời gian thực -->
+    <p>
+      <i class="far fa-clock" style="font-size: 1rem; color: #e3a8c7"></i>
+      <span style="font-size: 1rem">Thời gian: </span>
+      <span id="time" style="font-size: 1rem"></span>
+    </p>
+
+    <!-- Hiển thị ngày tháng năm -->
+    <p>
+      <span id="date" style="font-size: 1rem"></span>
+    </p>
+
+    <!-- Nút bật và tắt LED -->
+    <div class="container">
+      <h1>ESP32 Control</h1>
+      <!-- Nút điều khiển -->
+      <button class="button" onclick="toggleLED(0)">ON</button>
+      <button class="button" onclick="toggleLED(1)">OFF</button>
+      <button class="button" onclick="toggleLED(2)">AUTO</button>
+      <!-- Hiển thị giá trị cảm biến -->
+      <h2>Đọc giá trị cảm biến</h2>
+      <div id="sensorValue">Sensor Value: 0</div>
+    </div>
+
+    <!-- JavaScript để gửi yêu cầu và hiển thị giá trị ánh sáng -->
+    <script>
+      var broker = "test.mosquitto.org";
+      var port = 8081;
+      var clientID = "web_" + parseInt(Math.random() * 100, 10);
+      var topic = "minhsama";
+      var mqttClient = new Paho.MQTT.Client(broker, port, clientID);
+
+      var buttons = document.querySelectorAll(".button");
+
+      // Hàm này sẽ gửi tin nhắn đến ESP32 dựa trên id của nút
+      function toggleLED(buttonId) {
+        // Remove 'clicked' class from all buttons
+        buttons.forEach(function (button) {
+          button.classList.remove("clicked");
+        });
+
+        // Add 'clicked' class to the clicked button
+        buttons[buttonId].classList.add("clicked");
+
+        // Update LED status display based on buttonId
+        var ledStatus = "Đang tắt"; // Default status
+        var statusClass = "status-off"; // Default class
+        var message;
+        switch (buttonId) {
+          case 0:
+            ledStatus = "Đang bật";
+            message = "1";
+
+            break;
+          case 1:
+            ledStatus = "Đang tắt";
+            message = "2";
+
+            break;
+          case 2:
+            ledStatus = "Tự động";
+            message = "3";
+
+            break;
+        }
+
+        var mqttMessage = new Paho.MQTT.Message(message);
+        mqttMessage.destinationName = topic;
+        mqttClient.send(mqttMessage);
+        console.log(
+          "Button " + buttonId + " clicked! Message sent to MQTT broker."
+        );
+      }
+
+      mqttClient.connect({
+        onSuccess: function () {
+          console.log("Connected to MQTT broker");
+          mqttClient.subscribe("device/sensor"); // Đăng ký để nhận giá trị cảm biến từ MQTT
+        },
+        onFailure: function (errorMessage) {
+          console.log("Failed to connect: " + errorMessage.errorMessage);
+        },
+      });
+
+      // Hàm hiển thị thời gian thực
+      function displayTime() {
+        var currentTime = new Date();
+        var hours = currentTime.getHours();
+        var minutes = currentTime.getMinutes();
+        var seconds = currentTime.getSeconds();
+        var day = currentTime.getDay();
+        var date = currentTime.getDate();
+        var month = currentTime.getMonth();
+        var year = currentTime.getFullYear();
+
+        // Convert number of day, month to their names
+        var dayNames = [
+          "Chủ Nhật",
+          "Thứ Hai",
+          "Thứ Ba",
+          "Thứ Tư",
+          "Thứ Năm",
+          "Thứ Sáu",
+          "Thứ Bảy",
+        ];
+        var monthNames = [
+          "01",
+          "02",
+          "03",
+          "04",
+          "05",
+          "06",
+          "07",
+          "08",
+          "09",
+          "10",
+          "11",
+          "12",
+        ];
+
+        // Format the time
+        var formattedTime = hours + ":" + minutes + ":" + seconds;
+
+        // Format the date
+        var formattedDate =
+          dayNames[day] +
+          ", ngày " +
+          date +
+          " tháng " +
+          monthNames[month] +
+          " năm " +
+          year;
+
+        // Display time and date
+        document.getElementById("time").innerHTML = formattedTime;
+        document.getElementById("date").innerHTML = formattedDate;
+      }
+
+      // Gọi hàm displayTime mỗi giây
+      setInterval(displayTime, 1000);
+
+      // Callback để nhận giá trị cảm biến từ MQTT
+      mqttClient.onMessageArrived = function (message) {
+        var sensorValue = parseInt(message.payloadString);
+        document.getElementById("sensorValue").innerText =
+          "Sensor Value: " + sensorValue;
+        console.log("Received sensor value from MQTT:", sensorValue);
+      };
+    </script>
+  </body>
+</html>
